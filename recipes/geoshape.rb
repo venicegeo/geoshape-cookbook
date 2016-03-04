@@ -12,20 +12,11 @@ require "uri"
 
 include_recipe "chef-vault"
 
-geoserver_vault = get_secret(node.geoshape.geoserver.vault[:name], node.geoshape.geoserver.vault[:item])
-database_vault = get_secret(node.geoshape.database.vault[:name], node.geoshape.database.vault[:item])
-geonode_vault = get_secret(node.geoshape.geonode.vault[:name], node.geoshape.geonode.vault[:item])
+geoserver_password = node.geoshape.geoserver.admin_password
+geonode_password_hash = node.geoshape.admin_password_hash
 
-geoserver_password = geoserver_vault ? geoserver_vault['admin_password'] : node.geoshape.geoserver.admin_password
-geonode_password_hash = geonode_vault ? geonode_vault['admin_password_hash'] : node.geoshape.admin_password_hash
-
-if database_vault
-  database_password = database_vault['password']
-  imports_database_password = database_vault['imports_password']
-else
-  database_password = node.geoshape.database.password
-  imports_database_password = node.geoshape.imports_database.password
-end
+database_password = node.geoshape.database.password
+imports_database_password = node.geoshape.imports_database.password
 
 case node.platform
 when "centos", "redhat"
@@ -150,7 +141,7 @@ when "centos", "redhat"
     notifies :run, "ruby_block[wait for geoshape]", :before
   end
 
-  # Elasticsearch fails from time to time. Need to add a rescue to this 
+  # Elasticsearch fails from time to time. Need to add a rescue to this
   execute "#{node.python27} #{node.geoshape.manage} rebuild_index --noinput"
 
   # Making sure we ingest Geoserver layers
