@@ -11,22 +11,12 @@ require "net/https"
 require "uri"
 
 include_recipe 'chef-vault'
-geoserver_vault = get_secret(node.geoshape.geoserver.vault[:name], node.geoshape.geoserver.vault[:item])
-database_vault = get_secret(node.geoshape.database.vault[:name], node.geoshape.database.vault[:item])
 
-database_password = database_vault ? database_vault['imports_password'] : node.geoshape.imports_database.password
-
-if geoserver_vault
-  admin_password_hash = geoserver_vault['admin_password_hash']
-  admin_password = geoserver_vault['admin_password']
-  root_password_digest = geoserver_vault['root_password_digest']
-  root_password_hash = geoserver_vault['root_password_hash']
-else
-  admin_password_hash = node.geoshape.geoserver.password_hash
-  admin_password = node.geoshape.geoserver.admin_password
-  root_password_digest = node.geoserver.root_user.password_digest
-  root_password_hash = node.geoserver.root_user.password_hash
-end
+database_password = node.geoshape.imports_database.password
+admin_password_hash = node.geoshape.geoserver.password_hash
+admin_password = node.geoshape.geoserver.admin_password
+root_password_digest = node.geoserver.root_user.password_digest
+root_password_hash = node.geoserver.root_user.password_hash
 
 service "tomcat8" do
   action :nothing
