@@ -89,7 +89,7 @@ end
 geoshape_endpoint =
   if %w{127.0.0.1 localhost}.include?(node.geoshape.geoserver.endpoint)
     "http://localhost"
-  else 
+  else
     node.geoshape.https_enabled ? "https://#{node.geoshape.endpoint}" : "http://#{node.geoshape.endpoint}"
   end
 
