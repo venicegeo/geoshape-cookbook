@@ -1,19 +1,5 @@
 # This is an awful way to deal with IPs. This entire thing is pointless outside of vagrant and a local VM
-default.geoshape.endpoint =
-  if Chef::Config[:solo]
-    case node.platform
-    when "centos", "redhat"
-      case node.platform_version.to_i
-      when 6
-        node['network']['interfaces']['eth1']['addresses'].detect{|k,v| v[:family] == "inet" }.first
-      when 7
-        node['network']['interfaces']['enp0s8']['addresses'].detect{|k,v| v[:family] == "inet" }.first
-      end
-    end
-  else
-    node.ipaddress
-  end
-
+default.geoshape.endpoint = "localhost"
 node.normal.tomcat.base_version = 8
 node.normal.tomcat.install_method = "archive"
 node.normal.tomcat.jndi = true
