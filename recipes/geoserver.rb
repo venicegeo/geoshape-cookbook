@@ -153,7 +153,7 @@ end
   # Create a Geoserver Postgres JNDI store
   ruby_block "create Geoserver store" do
     block do
-      uri = URI.parse("http://localhost:#{node.tomcat.port}/geoserver/rest/workspaces/geonode/datastores.json")
+      uri = URI.parse("http://127.0.0.1:#{node.tomcat.port}/geoserver/rest/workspaces/geonode/datastores.json")
       http = Net::HTTP.new(uri.host, uri.port)
       req = Net::HTTP::Get.new(uri.request_uri)
       req.basic_auth(node.geoshape.geoserver.admin_user, admin_password)
@@ -165,7 +165,7 @@ end
       end
       unless resp.body.include?(node.geoshape.imports_database.geonode_alias)
         credentials = "#{node.geoshape.geoserver.admin_user}:'#{admin_password}'"
-        `curl -u #{credentials} -XPOST -H 'Content-type: text/xml' -d @#{Chef::Config[:file_cache_path]}/datastore.xml http://localhost:#{node.tomcat.port}/geoserver/rest/workspaces/geonode/datastores.xml`
+        `curl -u #{credentials} -XPOST -H 'Content-type: text/xml' -d @#{Chef::Config[:file_cache_path]}/datastore.xml http://127.0.0.1:#{node.tomcat.port}/geoserver/rest/workspaces/geonode/datastores.xml`
       end
     end
   end
