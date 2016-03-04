@@ -129,7 +129,7 @@ end
 ruby_block "wait for geoserver" do
   block do
     attempts = 0
-    uri = URI.parse("http://localhost:#{node.tomcat.port}/geoserver/rest/workspaces/geonode.xml")
+    uri = URI.parse("http://127.0.0.1:#{node.tomcat.port}/geoserver/rest/workspaces/geonode.xml")
     http = Net::HTTP.new(uri.host, uri.port)
     req = Net::HTTP::Get.new(uri.request_uri)
     req.basic_auth(node.geoshape.geoserver.admin_user, admin_password)
