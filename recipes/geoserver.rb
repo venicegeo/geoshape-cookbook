@@ -18,16 +18,18 @@ admin_password = node.geoshape.geoserver.admin_password
 root_password_digest = node.geoserver.root_user.password_digest
 root_password_hash = node.geoserver.root_user.password_hash
 
-service "tomcat8" do
-  action :nothing
-end
-
 include_recipe "geoshape::repos"
 package "geoshape-geoserver" do
   notifies :run, "execute[set geoserver permissions]"
 end
+
 include_recipe "java"
 include_recipe "tomcat"
+
+tomcat_service "tomcat8" do
+  action :nothing
+  env_vars [{ 'JAVA_OPTS' => node.normal.tomcat.java_options }]
+end
 
 execute "set geoserver permissions" do
   command "find #{node.geoshape.geoserver.data_dir} -type d -exec chmod 755 {} + && find #{node.geoshape.geoserver.data_dir} -type f -exec chmod 644 {} + && chown -R tomcat:tomcat #{node.geoshape.geoserver.data_dir}"
@@ -44,34 +46,34 @@ end
 template "#{node.geoshape.geoserver.data_dir}/security/usergroup/default/users.xml" do
   source "gs_users.xml.erb"
   mode 0644
-  owner "tomcat"
-  group "tomcat"
-  notifies :restart, "service[tomcat8]"
+  owner "tomcat_tomcat8"
+  group "tomcat_tomcat8"
+  notifies :restart, "tomcat_service[tomcat8]"
   # notifies :run, "ruby_block[wait for geoserver]"
   variables(password_hash: admin_password_hash)
 end
 
 file "#{node.geoshape.geoserver.data_dir}/security/masterpw.digest" do
   content root_password_digest
-  owner "tomcat"
-  group "tomcat"
-  notifies :restart, "service[tomcat8]"
+  owner "tomcat_tomcat8"
+  group "tomcat_tomcat8"
+  notifies :restart, "tomcat_service[tomcat8]"
   mode 0644
 end
 
 file "#{node.geoshape.geoserver.data_dir}/security/masterpw/default/passwd" do
   content root_password_hash
-  owner "tomcat"
-  group "tomcat"
-  notifies :restart, "service[tomcat8]"
+  owner "tomcat_tomcat8"
+  group "tomcat_tomcat8"
+  notifies :restart, "tomcat_service[tomcat8]"
   mode 0644
 end
 
 cookbook_file "#{node.geoshape.geoserver.data_dir}/security/geoserver.jceks" do
   source "geoserver.jceks"
-  owner "tomcat"
-  group "tomcat"
-  notifies :restart, "service[tomcat8]"
+  owner "tomcat_tomcat8"
+  group "tomcat_tomcat8"
+  notifies :restart, "tomcat_service[tomcat8]"
   mode 0644
 end
 
@@ -87,9 +89,9 @@ geoshape_endpoint =
 template "#{node.geoshape.geoserver.data_dir}/security/auth/geonodeAuthProvider/config.xml" do
   source "geonode_auth_provider_config.xml.erb"
   mode 0644
-  owner "tomcat"
-  group "tomcat"
-  notifies :restart, "service[tomcat8]", :immediately
+  owner "tomcat_tomcat8"
+  group "tomcat_tomcat8"
+  notifies :restart, "tomcat_service[tomcat8]", :immediately
   notifies :run, "ruby_block[wait for geoserver]", :immediately
   variables(url: geoshape_endpoint)
 end
@@ -98,7 +100,7 @@ remote_file "#{node.tomcat.lib_dir}/postgresql.jar" do
   source "https://jdbc.postgresql.org/download/postgresql-9.4.1207.jar"
   owner "root"
   group "root"
-  notifies :restart, "service[tomcat8]"
+  notifies :restart, "tomcat_service[tomcat8]"
   mode 0644
 end
 
@@ -113,11 +115,11 @@ jndi_connections = [
 node.normal.tomcat.jndi_connections = jndi_connections
 
 template "#{node.tomcat.webapp_dir}/geoserver/WEB-INF/web.xml" do
-  owner "tomcat"
-  group "tomcat"
+  owner "tomcat_tomcat8"
+  group "tomcat_tomcat8"
   mode 0644
   source "web.xml.erb"
-  notifies :restart, "service[tomcat8]"
+  notifies :restart, "tomcat_service[tomcat8]"
   variables(
     jsonp_enabled: node.geoshape.geoserver.jsonp_enabled,
     geoserver_directory: node.geoshape.geoserver.data_dir,
@@ -160,7 +162,7 @@ end
       resp = http.request(req)
 
       if resp.code != '200'
-        `service tomcat8 restart`
+        `tomcat_service tomcat8 restart`
         sleep 30
       end
       unless resp.body.include?(node.geoshape.imports_database.geonode_alias)
